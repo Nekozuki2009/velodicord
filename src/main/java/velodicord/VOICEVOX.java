@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,11 +24,13 @@ public class VOICEVOX {
             String rawOsArch = System.getProperty("os.arch");
             String osName, osArch;
             if (rawOsName.startsWith("Win")) {
-                try (InputStream in = new URL("https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download-windows-x64.exe").openStream()) {
+                InputStream in = new URL("https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download-windows-x64.exe").openStream();
+                try {
                     Files.copy(in, dataDirectory.resolve("download.exe"));
-                }
+                } catch (FileAlreadyExistsException ignored) {}
+
                 new ProcessBuilder("cmd.exe", "/c", "cd /d", dataDirectory.toString()).directory(dataDirectory.toFile()).start().waitFor();
-                switch (config.get("velodicord.VOICEVOX-type")) {
+                switch (config.get("VOICEVOX-type")) {
                     case "2" ->
                             new ProcessBuilder("cmd.exe", "/c", "download --device directml").directory(dataDirectory.toFile()).start().waitFor();
                     case "3" ->
@@ -50,11 +53,12 @@ public class VOICEVOX {
                 } else {
                     throw new RuntimeException("Unsupported OS architecture: " + rawOsArch);
                 }
-                try (InputStream in = new URL("https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download-" + osName + "-" + osArch).openStream()) {
+                InputStream in = new URL("https://github.com/VOICEVOX/voicevox_core/releases/latest/download/download-" + osName + "-" + osArch).openStream();
+                try {
                     Files.copy(in, dataDirectory.resolve("download"));
-                }
+                } catch (FileAlreadyExistsException ignored) {}
                 new ProcessBuilder("chmod", "+x", dataDirectory.resolve("download").toString()).start().waitFor();
-                switch (config.get("velodicord.VOICEVOX-type")) {
+                switch (config.get("VOICEVOX-type")) {
                     case "2" ->
                             new ProcessBuilder("bash", "-c", "./download --device directml").directory(dataDirectory.toFile()).start().waitFor();
                     case "3" ->
